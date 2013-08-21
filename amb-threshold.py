@@ -19,12 +19,20 @@ def cb_reached(illuminance):
 
 # Callback for illuminance without threshold
 def cb_illuminance(ilu):
-    if ilu/10 >= 750:
-        print(':|:|:|:|:|:|:|:|:|:')
-    elif ilu/10 >= 600:
-        print(':::::::::::::::::::')
-    else:
-        print(':-.-.-.-.-.-.-.-.-:')
+    tmpIlu = ilu/10 
+    tmpBar = "::-::"
+    while tmpIlu >= 0:
+        tmpBar = tmpBar + "-:"
+        tmpIlu = tmpIlu - 20
+
+    print tmpBar
+
+#    if ilu/10 >= 750:
+ #       print(':|:|:|:|:|:|:|:|:|:')
+  #  elif ilu/10 >= 600:
+   #     print(':::::::::::::::::::')
+    #else:
+     #   print(':-.-.-.-.-.-.-.-.-:')
 
     #print('Illuminance: ' + str(ilu/10) + ' Lux!')
 
