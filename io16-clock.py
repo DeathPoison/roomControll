@@ -59,6 +59,10 @@ class Clock():
             io.set_port_configuration('b', (1 << x) , 'o', True)
         io.set_port_configuration('b', (1 << port), 'o', False) # enable wanted port (displaygroup)
 
+    def double(self): # show double points - enable port first!
+        io.set_port_configuration('b', (1 << 1), 'o', True)
+        io.set_port_configuration('a', (1 << 5), 'o', True)
+
     def zero(self): # show zero - enable port first!
         io.set_port_configuration('a', (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 6) | (1 << 7), 'o', True)
     
@@ -137,6 +141,10 @@ class Clock():
             self.showDig(p2)
             self.clearNum()
 
+            #self.port(1)
+            #self.double()
+            #self.clearNum()
+
             self.port(3)
             self.showDig(p3)
             self.clearNum()
@@ -154,6 +162,8 @@ class Clock():
             self.t3 = self.time[3]
             print self.t0
             self.show(int(self.t0), int(self.t1), int(self.t2), int(self.t3))
+            #self.port(1) # have to add to show function cause this loop runs only 1 time in a sec
+            #self.double()
             self.m = self.m -1
         return self
 
@@ -186,7 +196,8 @@ if __name__ == "__main__":
     #sleep(2)
     c = Clock()
     c.clearNum()
-
+    #c.port(1)
+    #c.double()
     #c.show(1,3,3,7)
     c.showTime()
     #print strftime('%H%M')
