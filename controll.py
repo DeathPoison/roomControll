@@ -160,7 +160,7 @@ class Clock():
             self.t1 = self.time[1]
             self.t2 = self.time[2]
             self.t3 = self.time[3]
-            print self.t0
+            #print self.t0
             self.show(int(self.t0), int(self.t1), int(self.t2), int(self.t3))
             #self.port(1) # have to add to show function cause this loop runs only 1 time in a sec
             #self.double()
@@ -175,7 +175,7 @@ class Clock():
         self.t2 = self.time[2]
         self.t3 = self.time[3]
 
-        print self.time
+        #print self.time
 
         self.show(int(self.t0), int(self.t1), int(self.t2), int(self.t3))
 
@@ -194,11 +194,12 @@ if __name__ == "__main__":
 
     #nine()
     #sleep(2)
-    c = Clock()
-    c.clearNum()
     #c.port(1)
     #c.double()
     #c.show(1,3,3,7)
+
+    c = Clock()
+    c.clearNum()
     c.showTime()
     #print strftime('%H%M')
 
