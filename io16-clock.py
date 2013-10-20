@@ -7,6 +7,7 @@ UID = "aFh" # Change to your UID
 
 from time import strftime # use for clock simulation - shows time!
 from time import sleep # use for delay in loops - wait for n sec.!
+from threading import Thread # use to create a single threat for time
 
 from tinkerforge.ip_connection import IPConnection
 from tinkerforge.bricklet_io16 import IO16
@@ -160,7 +161,7 @@ class Clock():
             self.t1 = self.time[1]
             self.t2 = self.time[2]
             self.t3 = self.time[3]
-            print self.t0
+            #print self.t0
             self.show(int(self.t0), int(self.t1), int(self.t2), int(self.t3))
             #self.port(1) # have to add to show function cause this loop runs only 1 time in a sec
             #self.double()
@@ -181,6 +182,7 @@ class Clock():
 
         return self
 
+#### STOP CLOCK CLASS #####
 
 if __name__ == "__main__":
     ipcon = IPConnection() # Create IP connection
@@ -192,15 +194,20 @@ if __name__ == "__main__":
     # Set pin 0 on port a to output low
     #io.set_port_configuration('b', 1 << 4, 'o', False)
 
+# time examples
     #nine()
     #sleep(2)
-    c = Clock()
-    c.clearNum()
-    #c.port(1)
     #c.double()
     #c.show(1,3,3,7)
-    c.showTime()
+    #c.port(1)
     #print strftime('%H%M')
+   ##
+
+    c = Clock()
+    c.clearNum()
+    c.showTime()
 
     raw_input('Press key to exit\n') # Use input() in Python 3
+    #t.terminate() need to find a way stopping thread
     ipcon.disconnect()
+    quit()
