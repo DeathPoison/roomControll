@@ -34,6 +34,7 @@ class Clock():
         @author LimeBlack as David Crimi
 
     '''
+
     def __init__(self):
   	    self.n = 80 # 80 loop ca. one second cause of sleep by 0.0125
   	    self.m = 160 # 80 loop ca. one second cause of sleep by 0.0125
@@ -193,31 +194,59 @@ class Clock():
 
 #### START LCD20x4 KEY CALLBACK ######
 def cb_pressed(i):
-    #print "Pressed: " + str(i)
+
+    # add init for showState
+    showState = 0
+
+    # Register pressed buttons - 0 = left, 1 = middle, 2 = right
     if i == 0 :
-        print "pressed button left"
+
+        # start & stop state on lcd
+        if showState == 1:
+            showState = 0
+        else:
+            showState = 1
+            t = Thread(target=state)
+            t.start()
+
     elif i == 1: 
+
         # Turn backlight on
         if lcd.is_backlight_on() == 1: 
             lcd.backlight_off()
         else:
             lcd.backlight_on()
+
     elif i == 2:
+
+        # show time for one second!
         c = Clock()
         c.clearNum()
         t = Thread(target=c.showTime) # can replace last none with ('MyArgument', 1)
         t.start()
 
-def cb_released(i):
-    #print "Released: " + str(i)
-    if i == 0 :
-        print "released button left"
-    elif i == 1: 
-        print "released middle button"
+
+def cb_released(i): # not in use!
+    print "Released: " + str(i)
+    #if i == 0 :
+        #print "released button left"
+    #elif i == 1: 
+        #print "released middle button"
     #elif i == 2:
         #print "released button on right"
 
 #### STOP LCD 20x4 KEY CALLBACK ######
+
+
+#### STATE ON LCD SCREEN ####
+def state():
+    showState = 1
+    while showState == 1:
+        tmp = str(mst.get_chip_temperature()/10)  # lcd example
+        # Write some strings using the unicode_to_ks0066u function to map to the LCD charset
+        lcd.write_line(0, 0, unicode_to_ks0066u('LOLOLOLOLOLOLOLOLOLOLOLOLOLO'))
+        lcd.write_line(1, 0, unicode_to_ks0066u('Temperatur:  ' + tmp + '°C'))
+#### END STATE ####
 
 
 ###### Register Callback IO 16 Port B2 - Door ######
@@ -226,10 +255,10 @@ def cb_interrupt(port, interrupt_mask, value_mask):
     #print "Port: " + port + " by InterMask: " + str(bin(interrupt_mask)) + " with Value: " + str(bin(value_mask))
     value = str(bin(value_mask))
     #print value[-3] # should be the door
-    if value[-3] == "1":# and value[7] == "1":
+    if value[-3] == '1':# and value[7] == "1":
         lcd.write_line(3, 0, "                    ") # 20x Blank to clear last line
         lcd.write_line(3, 0, unicode_to_ks0066u('Door: Open!'))
-    elif value[-3] == "0":# and value[7] == "0":
+    elif value[-3] == '0':# and value[7] == "0":
         lcd.write_line(3, 0, "                    ") # 20x Blank to clear last line
         lcd.write_line(3, 0, unicode_to_ks0066u('Door: Closed... =)'))
 ###### STOP IO16 Callback ######
@@ -367,24 +396,26 @@ if __name__ == "__main__":
         #t = Thread(target=c.showTime) # can replace last none with ('MyArgument', 1)
         #t.start()
       
-        t = Thread(target=stopApp) # this programm disables the connection to tinkerforge devices!
-        t.start()
-        
         #for i in range(10): # show 10 sleeps to demonstrate working threads
         #	t = Thread(target=timeout, args=(i,))
         #	t.start()
         
-        # Turn backlight on
+        # Turn backlight on - default
         lcd.backlight_on()
 
-        tmp = str(mst.get_chip_temperature()/10)
+        # Disable showState for default
+        showState = 0
+
+        #tmp = str(mst.get_chip_temperature()/10)  # lcd example
         # Write some strings using the unicode_to_ks0066u function to map to the LCD charset
-        lcd.write_line(0, 0, unicode_to_ks0066u('Stromstärke: 17µA'))
-        lcd.write_line(1, 0, unicode_to_ks0066u('Temperatur:  ' + tmp + '°C'))
-
+        #lcd.write_line(0, 0, unicode_to_ks0066u('Stromstärke: 17µA'))
+        #lcd.write_line(1, 0, unicode_to_ks0066u('Temperatur:  ' + tmp + '°C'))
         # Write a string directly including characters from the LCD charset
-        lcd.write_line(2, 0, b'Drehzahl:   750min\xe9')
+        #lcd.write_line(2, 0, b'Drehzahl:   750min\xe9')
 
+        t = Thread(target=stopApp) # this programm disables the connection to tinkerforge devices!
+        t.start()
+        
         #print "hello!"
         # before join i can excute commands before Threads started
         t.join()
