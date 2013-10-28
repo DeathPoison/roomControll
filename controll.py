@@ -263,17 +263,27 @@ def cb_interrupt(port, interrupt_mask, value_mask):
     value = str(bin(value_mask))
     #print value[-3] # should be the door
     if value[-3] == '1':# and value[7] == "1":
-        lcd.write_line(3, 0, "                    ") # 20x Blank to clear last line
-        lcd.write_line(3, 0, unicode_to_ks0066u('Door: Open!'))
+        
+        iqr.set_value(0b0000000000001010) # turn on relay 1
+        time.sleep(1)
+        iqr.set_value(0b0000000000000000) # turn off remote
+        time.sleep(1)
+
+
+        #lcd.write_line(3, 0, "                    ") # 20x Blank to clear last line
+        #lcd.write_line(3, 0, unicode_to_ks0066u('Door: Open!'))
     elif value[-3] == '0':# and value[7] == "0":
-        lcd.write_line(3, 0, "                    ") # 20x Blank to clear last line
-        lcd.write_line(3, 0, unicode_to_ks0066u('Door: Closed... =)'))
+        iqr.set_value(0b0000000000000110) # turn off relay 1
+        time.sleep(1)
+        iqr.set_value(0b0000000000000000) # turn off remote
+        time.sleep(1)        
+        #lcd.write_line(3, 0, "                    ") # 20x Blank to clear last line
+        #lcd.write_line(3, 0, unicode_to_ks0066u('Door: Closed... =)'))
 ###### STOP IO16 Callback ######
 
 
 
 ########### SYSTEM COMMANDS :P ##############
-
 
 def timeout(i):
     print "sleeping 5 sec from thread %d" % i
