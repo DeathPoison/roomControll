@@ -7,6 +7,7 @@ mstUID = "62eUEf" # master brick
 ioUID  = "aFh" # io16
 lcdUID = "9ew" # lcd screen 20x4
 rpUID  = "8Cu" # rotary Poti
+iqrUID = "eRN" # industrial quad relay
 
 from time      import strftime # use for clock simulation - shows time!
 from time      import sleep    # use for delay in loops - wait for n sec.!
@@ -20,6 +21,7 @@ from tinkerforge.brick_master         import Master
 from tinkerforge.bricklet_io16        import IO16
 from tinkerforge.bricklet_rotary_poti import RotaryPoti
 from tinkerforge.bricklet_lcd_20x4    import LCD20x4
+from tinkerforge.bricklet_industrial_quad_relay import IndustrialQuadRelay
 
 #### START CLOCK CLASS ####
 class Clock():
@@ -349,6 +351,7 @@ if __name__ == "__main__":
     io = IO16(ioUID, ipcon)       # io16
     rp = RotaryPoti(rpUID, ipcon) # rotaryPoti
     lcd = LCD20x4(lcdUID, ipcon)  # lcd20x4
+    iqr = IndustrialQuadRelay(iqrUID, ipcon) # Create device object
 
     ipcon.connect(HOST, PORT) # Connect to brickd
     ## END CONNECTION
