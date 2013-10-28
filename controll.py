@@ -267,7 +267,7 @@ def cb_interrupt(port, interrupt_mask, value_mask):
         iqr.set_value(0b0000000000001010) # turn on relay 1
         sleep(1)
         iqr.set_value(0b0000000000000000) # turn off remote
-        sleep(1)
+        sleep(6)
 
 
         #lcd.write_line(3, 0, "                    ") # 20x Blank to clear last line
@@ -276,7 +276,7 @@ def cb_interrupt(port, interrupt_mask, value_mask):
         iqr.set_value(0b0000000000000110) # turn off relay 1
         sleep(1)
         iqr.set_value(0b0000000000000000) # turn off remote
-        sleep(1)        
+        sleep(6)        
         #lcd.write_line(3, 0, "                    ") # 20x Blank to clear last line
         #lcd.write_line(3, 0, unicode_to_ks0066u('Door: Closed... =)'))
 ###### STOP IO16 Callback ######
