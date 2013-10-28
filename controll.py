@@ -206,7 +206,8 @@ def cb_pressed(i):
             showState = 0
         else:
             showState = 1
-            t = Thread(target=state)
+            start = 1
+            t = Thread(target=state, args=start)
             t.start()
 
     elif i == 1: 
@@ -239,13 +240,17 @@ def cb_released(i): # not in use!
 
 
 #### STATE ON LCD SCREEN ####
-def state():
-    showState = 1
-    while showState == 1:
-        tmp = str(mst.get_chip_temperature()/10)  # lcd example
-        # Write some strings using the unicode_to_ks0066u function to map to the LCD charset
-        lcd.write_line(0, 0, unicode_to_ks0066u('LOLOLOLOLOLOLOLOLOLOLOLOLOLO'))
-        lcd.write_line(1, 0, unicode_to_ks0066u('Temperatur:  ' + tmp + '°C'))
+def state(start):
+
+    if start == 1:
+        showState = 1
+        while showState == 1:
+            tmp = str(mst.get_chip_temperature()/10)  # lcd example
+            # Write some strings using the unicode_to_ks0066u function to map to the LCD charset
+            lcd.write_line(0, 0, unicode_to_ks0066u('LOLOLOLOLOLOLOLOLOLOLOLOLOLO'))
+            lcd.write_line(1, 0, unicode_to_ks0066u('Temperatur:  ' + tmp + '°C'))
+    else:
+        showState = 0
 #### END STATE ####
 
 
