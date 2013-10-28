@@ -30,7 +30,8 @@ if __name__ == "__main__":
      # but here lamp on VALUE_B goes ON! ?!?
     #iqr.set_monoflop(VALUE_A_ON, (1 << 1), 1500)
      # in this config lamp goes off
-    iqr.set_monoflop(VALUE_A_ON, (1 << 0), 1500)
+    iqr.set_monoflop(VALUE_A_ON, (1 << 2), 1500)
+    iqr.set_monoflop(VALUE_A_OFF, (1 << 2), 1500)
      # but after send ing signals to switch, remote is sending...
      # already in this config lamp goes on
     #iqr.set_monoflop(VALUE_A_ON, (0 << 0), 1500)
