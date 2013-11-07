@@ -5,6 +5,7 @@ HOST   = "localhost"
 PORT   = 4223
 mstUID = "62eUEf" # master brick
 ioUID  = "aFh" # io16
+io1UID  = "ghh" # io16
 lcdUID = "9ew" # lcd screen 20x4
 rpUID  = "8Cu" # rotary Poti
 iqrUID = "eRN" # industrial quad relay
@@ -57,9 +58,9 @@ class Clock():
         if port == 1:
             port = 5
         if port == 2:
-        	port = 6
+            port = 6
         if port == 3:
-        	port = 7
+            port = 7
 
         self.ports = [] # list of all available ports
         self.ports.append(4)
@@ -199,6 +200,7 @@ class Board():
 
         self.mst = Master(mstUID, self.ipcon)   # Master Brick
         self.io = IO16(ioUID, self.ipcon)       # io16
+        self.io1 = IO16(io1UID, self.ipcon)       # io16
         self.rp = RotaryPoti(rpUID, self.ipcon) # rotaryPoti
         self.lcd = LCD20x4(lcdUID, self.ipcon)  # lcd20x4
         self.iqr = IndustrialQuadRelay(iqrUID, self.ipcon) # Create device object
@@ -344,10 +346,10 @@ class Board():
         print "finished sleeping from thread %d" % i
 
     def stopApp(self):
-    	raw_input('Press key to exit\n') # Use input() in Python 3
-    	#t.terminate() need to find a way stopping thread
-    	self.ipcon.disconnect()
-    	quit()
+        raw_input('Press key to exit\n') # Use input() in Python 3
+        #t.terminate() need to find a way stopping thread
+        self.ipcon.disconnect()
+        quit()
 
     #### START UNICODE TO KOS0006U FOR LCD20x4 ######
     # Maps a Python string to the LCD charset
@@ -447,8 +449,8 @@ if __name__ == "__main__":
             #t.start()
           
             #for i in range(10): # show 10 sleeps to demonstrate working threads
-            #	t = Thread(target=timeout, args=(i,))
-            #	t.start()
+            #   t = Thread(target=timeout, args=(i,))
+            #   t.start()
             
             # Turn backlight on - default
             #lcd.backlight_on()
@@ -473,7 +475,12 @@ if __name__ == "__main__":
 
         t = Thread(target=b.stopApp) # this programm disables the connection to tinkerforge devices!
         t.start()
-        
+
+        b.io1.set_port_configuration('a', (1 << 0), 'o', True)        
+        sleep(1)
+        b.io1.set_port_configuration('a', (1 << 0), 'o', False)        
+
+
         #print "hello!"
         # before join i can excute commands before Threads started
         t.join()
