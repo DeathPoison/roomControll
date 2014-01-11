@@ -1,14 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-HOST   = "192.168.0.111"
-#HOST   = "localhost"
-PORT   = 4223
-mstUID = "62eUEf" # master brick
-io1UID  = "ghh" # io16
-lcdUID = "9ew" # lcd screen 20x4
-iqrUID = "eRN" # industrial quad relay
-
 from time      import strftime # use for clock simulation - shows time!
 from time      import sleep    # use for delay in loops - wait for n sec.!
 from threading import Thread   # use to create a single threat for time
@@ -28,32 +20,36 @@ class Board():
        This class handles the communication to my board!
 
         @author LimeBlack as David Crimi
+        @require Hardware: 
+            Master
+            IO16
+            LCD20x4
+            IndustrialQuadRelay
     '''
 
-    def __init__(self):
+    def __init__(self, mst, io1, lcd, iqr, ipcon):
 
-        self.ipcon = IPConnection() # Create IP connection
+        self.ipcon = ipcon # Create IP connection
 
-        self.mst = Master(mstUID, self.ipcon)   # Master Brick
-        self.io1 = IO16(io1UID, self.ipcon)       # io16
-        self.lcd = LCD20x4(lcdUID, self.ipcon)  # lcd20x4
-        self.iqr = IndustrialQuadRelay(iqrUID, self.ipcon) # Create device object
+        self.mst = mst     # Master Brick
+        self.io1 = io1     # io16
+        self.lcd = lcd     # lcd20x4
+        self.iqr = iqr     # Create device object
 
-        self.ipcon.connect(HOST, PORT) # Connect to brickd
-
-        self.showState = True
-        self.spyDoor = True
+        self.spyDoor   = False
+        self.showState = False
                
         self.lcd.backlight_on()
 
-        """
         ## REGISTER CALLBACKS
-        self.io.register_callback(self.io.CALLBACK_INTERRUPT, self.cb_interrupt)
-        self.io.set_port_interrupt('b', 1 << 2) # port b2 to listen the door....
-        """
         self.lcd.register_callback(self.lcd.CALLBACK_BUTTON_PRESSED , self.cb_pressed )
         self.lcd.register_callback(self.lcd.CALLBACK_BUTTON_RELEASED, self.cb_released)
         ## END REGISTER CALLBACKS
+
+        ## Init noise
+        self.io1.set_port_configuration('a', (1 << 0), 'o', True)        
+        sleep(.1)
+        self.io1.set_port_configuration('a', (1 << 0), 'o', False)         
 
     #### START LCD20x4 KEY CALLBACK ######
     def cb_pressed(self, i): 
@@ -95,7 +91,6 @@ class Board():
             #print "released middle button"
         #elif i == 2:
             #print "released button on right"
-
     #### STOP LCD 20x4 KEY CALLBACK ######
 
 
@@ -172,13 +167,13 @@ class Board():
         """
     #### END DOOR SPY #####
 
-    ########### SYSTEM COMMANDS :P ##############
+    ########### SYSTEM COMMANDS :P ######
     def timeout(self, i):
         print "sleeping 5 sec from thread %d" % i
         sleep(5)
         print "finished sleeping from thread %d" % i
 
-    def stopApp(self):
+    def shutdown(self):
         raw_input('Press key to exit\n') # Use input() in Python 3
         #t.terminate() need to find a way stopping thread
         
@@ -188,6 +183,14 @@ class Board():
 
         self.ipcon.disconnect()     # disconnect from tinkerforge
         quit()                      # close programm
+
+    def quit(self):
+        self.spyDoor = False        # turn all "apps" off
+        self.showState = False      # means stop while loop
+        self.lcd.backlight_off()    # and lcd screen off
+
+        self.ipcon.disconnect()     # disconnect from tinkerforge
+    #### END SYSTEM COMMANDS ############
 
     #### START UNICODE TO KOS0006U FOR LCD20x4 ######
     # Maps a Python string to the LCD charset
@@ -275,31 +278,43 @@ class Board():
             ks0066u += c
 
         return ks0066u
-    ##### STOP UNICODE TO KOS0006U ######
+    ##### STOP UNICODE TO KOS0006U ##################
 
 
 if __name__ == "__main__":
 
-    try:          
+    try:   
 
-        b = Board()
+        ### Connection for Board
+        PORT   = 4223
+        BOARD_HOST   = "192.168.0.111"
+        BOARD_mstUID = "62eUEf" # master brick
+        BOARD_io1UID = "ghh"    # io16
+        BOARD_lcdUID = "9ew"    # lcd screen 20x4
+        BOARD_iqrUID = "eRN"    # industrial quad relay
+        #### END BOARD CONNECTION           
 
-        t = Thread(target=b.state) 
-        t.start()
+        # Connect to WLAN Controller
+        ipcon = IPConnection() # Create IP connection
 
-        t = Thread(target=b.door) 
-        t.start()
+        mst = Master(BOARD_mstUID, ipcon)   # Master Brick
+        io1 = IO16(BOARD_io1UID, ipcon)       # io16
+        lcd1 = LCD20x4(BOARD_lcdUID, ipcon)  # lcd20x4
+        iqr = IndustrialQuadRelay(BOARD_iqrUID, ipcon) # Create device object
 
-        b.io1.set_port_configuration('a', (1 << 0), 'o', True)        
-        sleep(.1)
-        b.io1.set_port_configuration('a', (1 << 0), 'o', False)        
+        ipcon.connect(BOARD_HOST, PORT) # Connect to brickd
 
-        t = Thread(target=b.stopApp) # this programm disables the connection to tinkerforge devices!
+        b = Board(mst, io1, lcd1, iqr, ipcon)
+
+        t = Thread(target=b.shutdown) # this programm disables the connection to tinkerforge devices!
         t.start()
 
         # before join i can excute commands before Threads started
         t.join()
         # after join all commands wait for finished jobs
+        
+        print "SHUTDOWN Finished!" 
+        quit()
 
     except Exception as errtxt:
         print errtxt
