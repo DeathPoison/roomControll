@@ -10,6 +10,8 @@ from threading import Thread   # use to create a single threat for time
 import sys   # for unicode_to_kos0006u
 import types # for unicode_to_kos0006u
 
+import socket # check if tinker is available
+
 from tinkerforge.ip_connection        import IPConnection
 from tinkerforge.brick_master         import Master
 from tinkerforge.bricklet_io16        import IO16
@@ -24,7 +26,14 @@ try:
 except ImportError as err:
     print err
 
-
+def isOpen(ip,port):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.connect((ip, int(port)))
+        s.shutdown(2)
+        return True
+    except:
+        return False
 
 if __name__ == "__main__":
     try:
@@ -34,14 +43,6 @@ if __name__ == "__main__":
         MENU_jskUID = "hAP" # Joystick
         ### END MENU CONNECTION
 
-        # Connect to WLAN Controller
-        MENU_ipcon = IPConnection() # Create IP connection
-
-        lcd = LCD20x4(MENU_lcdUID, MENU_ipcon) # Create device object LCD
-        jsk = Joystick(MENU_jskUID, MENU_ipcon) # Create device object JOYSTICK
-        
-        # Don't use device before ipcon is connected
-        MENU_ipcon.connect(MENU_HOST, PORT) # Connect to brickd
         
         ### Connection for Board
         BOARD_HOST   = "192.168.0.111"
@@ -51,20 +52,36 @@ if __name__ == "__main__":
         BOARD_iqrUID = "eRN"    # industrial quad relay
         #### END BOARD CONNECTION
 
-        BOARD_ipcon = IPConnection() # Create IP connection
+        if isOpen(MENU_HOST, PORT):
 
-        mst = Master(BOARD_mstUID, BOARD_ipcon)   # Master Brick
-        io1 = IO16(BOARD_io1UID, BOARD_ipcon)       # io16
-        lcd1 = LCD20x4(BOARD_lcdUID, BOARD_ipcon)  # lcd20x4
-        iqr = IndustrialQuadRelay(BOARD_iqrUID, BOARD_ipcon) # Create device object
+            # Connect to WLAN Controller
+            MENU_ipcon = IPConnection() # Create IP connection
 
-        BOARD_ipcon.connect(BOARD_HOST, PORT) # Connect to brickd
+            lcd = LCD20x4(MENU_lcdUID, MENU_ipcon) # Create device object LCD
+            jsk = Joystick(MENU_jskUID, MENU_ipcon) # Create device object JOYSTICK
+            
+            # Don't use device before ipcon is connected
+            MENU_ipcon.connect(MENU_HOST, PORT) # Connect to brickd
 
-        # create Menu instance with the nessesary Hardware # IPCON to close Tinker Connection
-        M = M(jsk,lcd, MENU_ipcon) 
+            # create Menu instance with the nessesary Hardware # IPCON to close Tinker Connection
+            M = M(jsk,lcd, MENU_ipcon) 
+        else:
+            print 'menu is offline'        
 
-        # create Board instance 
-        B = B(mst, io1, lcd1, iqr, BOARD_ipcon)        
+        if isOpen(BOARD_HOST, PORT):
+            BOARD_ipcon = IPConnection() # Create IP connection
+
+            mst = Master(BOARD_mstUID, BOARD_ipcon)   # Master Brick
+            io1 = IO16(BOARD_io1UID, BOARD_ipcon)       # io16
+            lcd1 = LCD20x4(BOARD_lcdUID, BOARD_ipcon)  # lcd20x4
+            iqr = IndustrialQuadRelay(BOARD_iqrUID, BOARD_ipcon) # Create device object
+
+            BOARD_ipcon.connect(BOARD_HOST, PORT) # Connect to brickd
+            
+            # create Board instance 
+            B = B(mst, io1, lcd1, iqr, BOARD_ipcon)        
+        else:
+            print 'board offline'
 
         # On Press close Application
         raw_input('Press key to exit\n') # Use input() in Python 3
