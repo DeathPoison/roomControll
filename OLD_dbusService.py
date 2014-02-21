@@ -111,8 +111,8 @@ class MyDBUSService(dbus.service.Object):
             print errtxt
 
     @dbus.service.method('org.limeblack.roomcontroll')
-    def hello(self):
-        return "Hello, World!"
+    def status(self):
+        return 'Board: '+str(self.BoardIsRunning)+'\nMenu: '+str(self.MenuIsRunning)
     
     @dbus.service.method('org.limeblack.roomcontroll')
     def startBoard(self):
