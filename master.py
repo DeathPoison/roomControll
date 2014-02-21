@@ -61,13 +61,13 @@ class master():
         return
         
     def start(self):
-        if self.BOARD_running: return 'Board already running!'
-        else: self.startBoard(); return 'Board Started!'
+        if self.BOARD_running: print 'Board already running!'
+        else: self.startBoard(); print 'Board Started!'
 
-        if self.MENU_running: return 'Menu already running!'
-        else: self.startMenu(); return 'Menu Started!'
+        if self.MENU_running: print 'Menu already running!'
+        else: self.startMenu(); print 'Menu Started!'
         return 'Started!'
-
+        
     def status(self):
         return 'Board: '+str(self.BOARD_running)+'\nMenu: '+str(self.MENU_running)
     
