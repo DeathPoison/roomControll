@@ -133,7 +133,7 @@ if __name__ == "__main__":
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         
         # Bind the socket to the address given on the command line
-        server_name = '127.0.0.1'
+        server_name = '192.168.0.111'
         server_address = (server_name, 10000)
         print >>sys.stderr, 'starting up on %s port %s' % server_address
         sock.bind(server_address)
