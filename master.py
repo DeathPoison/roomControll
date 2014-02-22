@@ -67,7 +67,7 @@ class master():
         if self.MENU_running: print 'Menu already running!'
         else: self.startMenu(); print 'Menu Started!'
         return 'Started!'
-        
+
     def status(self):
         return 'Board: '+str(self.BOARD_running)+'\nMenu: '+str(self.MENU_running)
     
