@@ -57,7 +57,6 @@ class master():
         self.BOARD_iqrUID = "eRN"    # industrial quad relay
         #### END BOARD CONNECTION
 
-        #print self.start()
         return
         
     def start(self):
