@@ -137,13 +137,13 @@ class Echo(protocol.Protocol):
             print 'found command!'
             responseOFdata = function_dict[data]()
             print responseOFdata
-            self.transport.write('Successfully send Command: '+data+'\n')
-            self.transport.write('Response is: \n')
-            self.transport.write(responseOFdata+'\n')
+            self.transport.write('[color=CCFF33]Command: '+data+'[/color]\n')
+            self.transport.write('Response is: \n[color=00FFFF]')
+            self.transport.write(responseOFdata+'[/color]\n')
         else:
             print 'dont know what to do with this post...'
             print "As soon as any data is received, write it back."
-            self.transport.write('You send this Command: '+data)
+            self.transport.write('[color=CC3300]Not fount: '+data+'![/color]')
 
 if __name__ == "__main__":
     try:
