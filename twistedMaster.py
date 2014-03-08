@@ -47,7 +47,7 @@ class master():
         self.BOARD_running = False
 
         ### Connection for Menu
-        self.MENU_HOST   = "127.0.0.1"#"192.168.0.150" # Manually Set IP of Controller Board
+        self.MENU_HOST   = "192.168.0.150" # Manually Set IP of Controller Board   "127.0.0.1"#
         self.MENU_lcdUID = "gFt" # LCD Screen
         self.MENU_jskUID = "hAP" # Joystick
         ### END MENU CONNECTION
