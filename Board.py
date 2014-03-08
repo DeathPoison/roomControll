@@ -12,11 +12,12 @@ from tinkerforge.ip_connection        import IPConnection
 from tinkerforge.brick_master         import Master
 from tinkerforge.bricklet_io16        import IO16
 from tinkerforge.bricklet_lcd_20x4    import LCD20x4
+from tinkerforge.bricklet_ambient_light import AmbientLight
 from tinkerforge.bricklet_industrial_quad_relay import IndustrialQuadRelay
 
 
 class Board():
-    '''
+    """
        This class handles the communication to my board!
 
         @author LimeBlack as David Crimi
@@ -25,9 +26,9 @@ class Board():
             IO16
             LCD20x4
             IndustrialQuadRelay
-    '''
+    """
 
-    def __init__(self, mst, io1, lcd, iqr, ipcon):
+    def __init__(self, mst, io1, lcd, iqr, ilu, ipcon):
 
         self.ipcon = ipcon # Create IP connection
 
@@ -35,10 +36,12 @@ class Board():
         self.io1 = io1     # io16
         self.lcd = lcd     # lcd20x4
         self.iqr = iqr     # Create device object
+        self.ilu = ilu     # Create device object
 
         self.spyDoor   = False
         self.showState = False
-               
+        self.tmpLight = False
+
         self.lcd.backlight_on()
 
         ## REGISTER CALLBACKS
@@ -52,6 +55,7 @@ class Board():
         self.io1.set_port_configuration('a', (1 << 0), 'o', False)         
 
     #### START LCD20x4 KEY CALLBACK ######
+
     def cb_pressed(self, i): 
 
         # Register pressed buttons - 0 = left, 1 = middle, 2 = right
@@ -96,19 +100,68 @@ class Board():
 
     #### STATE ON LCD SCREEN ####
     def state(self):
-        while self.showState == True:
+        while self.showState:
             tmp = str(self.mst.get_chip_temperature()/10)
+            tmpAmb = str(self.ilu.get_illuminance()/10.0)
             # Write some strings using the unicode_to_ks0066u function to map to the LCD charset
             self.lcd.write_line(0, 0, self.unicode_to_ks0066u('Time: ' + strftime('%H:%M')))
             self.lcd.write_line(1, 0, self.unicode_to_ks0066u('Temperatur:  ' + tmp + '°C'))
+            self.lcd.write_line(2, 0, self.unicode_to_ks0066u('Illuminace:  ' + tmpAmb + ' Lux'))
             sleep(1)
     #### END STATE ####
+
+
+
+
+    ######## Commands ######################
+    def status(self, parameter):
+        if parameter == "door":
+            binTmp = bin(self.io1.get_port('b')) # get value mask on port b binary
+            #print binTmp
+            tmpDoor = binTmp[9] # catch door bin 0b11111110 latest bit is the door
+            if tmpDoor == '1':# OPEN
+                return True # true = open
+            if tmpDoor == '0':
+                return False # closed
+        if parameter == "temp":
+            tmp = str(self.mst.get_chip_temperature()/10)
+            return tmp
+        if parameter == "beep":
+            self.io1.set_port_configuration('a', (1 << 0), 'o', True)
+            sleep(.5)
+            self.io1.set_port_configuration('a', (1 << 0), 'o', False)
+            return True
+        if parameter == "light":
+            if self.tmpLight:# OPEN
+                self.tmpLight = False
+
+                self.lcd.write_line(3, 0, "                    ") # 20x Blank to clear last line
+                self.lcd.write_line(3, 0, self.unicode_to_ks0066u('Door: Open!'))
+
+                self.iqr.set_value(0b0000000000001010) # turn on relay 1
+                sleep(2)
+                self.iqr.set_value(0b0000000000000000) # turn off remote
+                sleep(2)
+                return True
+
+            else:
+                self.tmpLight = True
+
+                self.lcd.write_line(3, 0, "                    ") # 20x Blank to clear last line
+                self.lcd.write_line(3, 0, self.unicode_to_ks0066u('Door: Closed... =)'))
+
+                self.iqr.set_value(0b0000000000000110) # turn off relay 1
+                sleep(2)
+                self.iqr.set_value(0b0000000000000000) # turn off remote
+                sleep(2)
+                return False
+
 
     #### START DOOR SPY #####
     def door(self):
 
         tmpRAM = '1' # RAM save last value from door - to verify changes
-        while self.spyDoor == True:
+        while self.spyDoor:
             sleep(2) # loop time!
             binTmp = bin(self.io1.get_port('b')) # get value mask on port b binary
             #print binTmp
@@ -137,41 +190,15 @@ class Board():
                     sleep(1)
                     self.iqr.set_value(0b0000000000000000) # turn off remote
                     sleep(1)  
-            else: # do nothing
-                pass      
-        """
-            ###### Register Callback IO 16 Port B2 - Door ######
-            def cb_interrupt(self, port, interrupt_mask, value_mask):
-                ## only debug
-                #print "Port: " + port + " by InterMask: " + str(bin(interrupt_mask)) + " with Value: " + str(bin(value_mask))
-                value = str(bin(value_mask))
-                #print value[-3] # should be the door
-                if value[-3] == '1':# and value[7] == "1":
-                    
-                    self.iqr.set_value(0b0000000000001010) # turn on relay 1
-                    sleep(1)
-                    self.iqr.set_value(0b0000000000000000) # turn off remote
-                    sleep(6)
 
-                    self.lcd.write_line(3, 0, "                    ") # 20x Blank to clear last line
-                    self.lcd.write_line(3, 0, self.unicode_to_ks0066u('Door: Open!'))
-
-                elif value[-3] == '0':# and value[7] == "0":
-                    self.iqr.set_value(0b0000000000000110) # turn off relay 1
-                    sleep(1)
-                    self.iqr.set_value(0b0000000000000000) # turn off remote
-                    sleep(6)        
-                    self.lcd.write_line(3, 0, "                    ") # 20x Blank to clear last line
-                    self.lcd.write_line(3, 0, self.unicode_to_ks0066u('Door: Closed... =)'))
-            ###### STOP IO16 Callback ######
-        """
     #### END DOOR SPY #####
 
     ########### SYSTEM COMMANDS :P ######
-    def timeout(self, i):
-        print "sleeping 5 sec from thread %d" % i
+    @staticmethod # is static - self not nessesary! - accessable through the instance of this class
+    def timeout(i):
+        print("sleeping 5 sec from thread %d" % i)
         sleep(5)
-        print "finished sleeping from thread %d" % i
+        print("finished sleeping from thread %d" % i)
 
     def shutdown(self):
         raw_input('Press key to exit\n') # Use input() in Python 3
@@ -292,7 +319,8 @@ if __name__ == "__main__":
         BOARD_io1UID = "ghh"    # io16
         BOARD_lcdUID = "9ew"    # lcd screen 20x4
         BOARD_iqrUID = "eRN"    # industrial quad relay
-        #### END BOARD CONNECTION           
+        BOARD_iluUID = "i8U"    # industrial quad relay
+        #### END BOARD CONNECTION
 
         # Connect to WLAN Controller
         ipcon = IPConnection() # Create IP connection
@@ -301,10 +329,19 @@ if __name__ == "__main__":
         io1 = IO16(BOARD_io1UID, ipcon)       # io16
         lcd1 = LCD20x4(BOARD_lcdUID, ipcon)  # lcd20x4
         iqr = IndustrialQuadRelay(BOARD_iqrUID, ipcon) # Create device object
+        ilu = AmbientLight(BOARD_iluUID, ipcon) # Create device object
 
         ipcon.connect(BOARD_HOST, PORT) # Connect to brickd
 
-        b = Board(mst, io1, lcd1, iqr, ipcon)
+        b = Board(mst, io1, lcd1, iqr, ilu, ipcon)
+
+        #print b.status('temp')
+        #print b.status('door')
+        #print b.status('beep')
+        #print b.status('light')
+        #print b.status('light')
+        #print b.status('light')
+
 
         t = Thread(target=b.shutdown) # this programm disables the connection to tinkerforge devices!
         t.start()
@@ -313,8 +350,8 @@ if __name__ == "__main__":
         t.join()
         # after join all commands wait for finished jobs
         
-        print "SHUTDOWN Finished!" 
+        print("SHUTDOWN Finished!")
         quit()
 
     except Exception as errtxt:
-        print errtxt
+        print(errtxt)

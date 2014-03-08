@@ -16,11 +16,12 @@ from tinkerforge.bricklet_lcd_20x4 import LCD20x4
 #from tinkerforge.bricklet_linear_poti import LinearPoti
 
 class Menu():
-    def __init__(self, jsk, lcd, ipcon):
+    def __init__(self, jsk, lcd, ipcon, board):
 
         self.jsk   = jsk        # set Hardware
         self.lcd   = lcd        # set Hardware
         self.ipcon = ipcon      # set Hardware
+        self.board = board      # use the board
 
         self.exit       = False # to stop main loop
         self.executable = False # Menu contains executable Elements -> default: no
@@ -33,20 +34,18 @@ class Menu():
 
         self.content = {        # My Menu
             'Main': {                                              # Menu always is a dict. 
-                '1 Tinkerforge': { '1 Clock':  ['Start',  
-                                                'Status'], 
+                '1 Tinkerforge': { '2 Door':   ['Status',
+                                                'Toggle Light']},     # beginning with key as menu title and a list as value
 
-                                   '2 Door':   ['Status', 
-                                                'Light ON', 
-                                                'Light OFF']},     # beginning with key as menu title and a list as value
+                #'2 Trash':       { '1 BEEP':   ['Start',
+                #                                'Stop',
+                #                                '1sec Beep']},     # witch are subtitles or functions
 
-                '2 Trash':       { '1 BEEP':   ['Start',  
-                                                'Stop',     
-                                                '1sec Beep']},     # witch are subtitles or functions
+                '2 Trash':       { '1 BEEP':   'Beep'},     # witch are subtitles or functions
 
                 '3 Status':      { '1 Master': ['Temp',   
                                                 'Voltage',  
-                                                'Current',    
+                                                'Light Lvl',
                                                 'Ext. Voltage']},  # !! Menus in menus are not allowed this time!
 
                 '4 Version':                   ['Version: 0.3b',      
@@ -272,10 +271,10 @@ class Menu():
 
         elif x == -100:       ### LEFT
             if type(self.posX) == str:
-            	pass
+                pass
 
             elif type(self.posX) == list:
-            	tmpContent = self.content[self.posX[0]]
+                tmpContent = self.content[self.posX[0]]
                 
                 if len(self.posX) >= 4:
                     print 'thats to deep!'
@@ -318,13 +317,16 @@ class Menu():
 
     def enterNextLvl(self, menuParticle):
 
+        if type(menuParticle) == str:
+            return self.startCommand(str(menuParticle))
+
         if type(menuParticle) == list:
             if self.executable == True:
                 for index,item in enumerate(menuParticle):
 
                     if index == ( self.page * (self.lcdRows-1)) + self.posY-1: # page + lcdRows + posY = actually pos in list
                         print 'EXECUTABLE IS: ' + str(item)
-                        return 'executed!'
+                        return self.startCommand(str(item))
             else:
                 return 'should not happen!'
 
@@ -352,6 +354,29 @@ class Menu():
                     self.page = 0
                     self.setPage(0)     # push page content to screen 
                     return
+
+    def startCommand(self, command):
+        if type(command) == str:
+            if command == "Toggle Light":
+                print self.board.status('light')
+                return
+            if command == "Status":
+                print self.board.status('door')
+                return
+            if command == "Beep":
+                print self.board.status('beep')
+                return
+            if command == "Temp":
+                print self.board.status('temp')
+                return
+            #if command == "Voltage":
+            #if command == "Light Lvl":
+            #    return self.board.status('light')
+
+            return 'not implemented yet!'
+
+        else:
+            return False
 
     ### STOP MAIN FUNCTION
 
@@ -534,12 +559,46 @@ if __name__ == "__main__": # Only used on direct access!
 
     try:
 
+        try:
+            from Board import Board as B
+            from tinkerforge.brick_master         import Master
+            from tinkerforge.bricklet_io16        import IO16
+            from tinkerforge.bricklet_ambient_light import AmbientLight
+            from tinkerforge.bricklet_industrial_quad_relay import IndustrialQuadRelay
+        except ImportError as err:
+            print err
+
+
         ### Connection for Menu
         WLAN_PORT   = 4223
-        WLAN_HOST = "192.168.0.150" # Manually Set IP of Controller Board
+        WLAN_HOST = "127.0.0.1"#"192.168.0.150" # Manually Set IP of Controller Board
         WLAN_lcdUID = "gFt" # LCD Screen
         WLAN_jskUID = "hAP" # Joystick
         ### END MENU CONNECTION
+
+        ### Connection for Board
+        BOARD_HOST   = "192.168.0.111"
+        BOARD_mstUID = "62eUEf" # master brick
+        BOARD_io1UID = "ghh"    # io16
+        BOARD_lcdUID = "9ew"    # lcd screen 20x4
+        BOARD_iqrUID = "eRN"    # industrial quad relay
+        BOARD_iluUID = "i8U"    # Ambient Light
+        #### END BOARD CONNECTION
+
+        BOARD_ipcon = IPConnection() # Create IP connection
+
+        mst = Master(BOARD_mstUID, BOARD_ipcon)   # Master Brick
+        io1 = IO16(BOARD_io1UID, BOARD_ipcon)       # io16
+        lcd1 = LCD20x4(BOARD_lcdUID, BOARD_ipcon)  # lcd20x4
+        iqr = IndustrialQuadRelay(BOARD_iqrUID, BOARD_ipcon) # Create device object
+        ilu = AmbientLight(BOARD_iqrUID, BOARD_ipcon) # Create device object
+
+        BOARD_ipcon.connect(BOARD_HOST, WLAN_PORT) # Connect to brickd
+
+        # create Board instance
+        BB = B(mst, io1, lcd1, iqr, ilu, BOARD_ipcon)
+        print "started board"
+        print BB.status('door')
 
         # Connect to WLAN Controller
         WLAN_ipcon = IPConnection() # Create IP connection
@@ -549,8 +608,10 @@ if __name__ == "__main__": # Only used on direct access!
         # Don't use device before ipcon is connected
         WLAN_ipcon.connect(WLAN_HOST, WLAN_PORT) # Connect to brickd
       
-        n = Menu(jsk, lcd, WLAN_ipcon) # yeah dont need thread ;)
-        
+        n = Menu(jsk, lcd, WLAN_ipcon, BB) # yeah dont need thread ;)
+        print n.board.status('door')
+        print "started menu"
+
         n.shutdown() # close application  
         print "SHUTDOWN Finished!" 
         quit()
