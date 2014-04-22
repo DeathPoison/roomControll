@@ -1,0 +1,173 @@
+#:import SlideTransition kivy.uix.screenmanager.SlideTransition
+<Menu>:
+    button_font_size: '25sp'
+    padding:          root.width * 0.02, root.width * 0.02 # added 2% padding!
+    BoxLayout:
+        orientation:  'vertical'
+        padding:      root.padding
+
+        canvas:
+            Rectangle:
+                source:'background/stressed_linen_@2X.png'
+                pos:   self.pos
+                size:  self.size # streched to full screen size...
+
+        Label: 
+            markup:    True
+            font_size: root.button_font_size
+            text:      'Welcome to [color=CCFF33]TinkerControll[/color]'  
+            
+        Button:
+            text:      'Start!'      
+            size_hint: 1, None
+            #border: 150,150,150,150
+            font_size: root.button_font_size
+            on_press:  root.manager.current = 'setup'
+
+<Setup>:
+    button_font_size: '25sp'
+    padding:          root.width * 0.02, root.width * 0.02 # added 2% padding!
+    BoxLayout:
+        orientation: 'vertical'
+        padding:            root.padding
+
+        canvas:
+            Rectangle:
+                source:   'background/stressed_linen_@2X.png'
+                pos:      self.pos
+                size:     self.size # streched to full screen size...
+        
+
+        BoxLayout: 
+            id:            tutorial_serverBox
+            orientation:   'horizontal'
+            size_hint:     1, None
+            height:        server_label.height + ( 2 * root.padding[1])
+
+            Label:
+                id:        server_label
+                text:      'Server:'
+                font_size: root.button_font_size
+                size_hint: 1, None
+                height:    self.texture_size[1] + ( 2 * root.padding[1]) 
+                #on_press:    root.callAction(tutorial_textInput.text) # call main function with argument!
+
+            TextInput:
+                id:        tutorial_server
+                text:      '192.168.0.111'
+                font_size: root.button_font_size
+                multiline: False
+                size_hint: 1, None
+                height:    server_label.height
+                #on_press:     root.clear() # main.py -> funtion in tutorial class
+
+        BoxLayout: 
+            id:            tutorial_port
+            orientation:   'horizontal'
+            size_hint:     1, None
+            height:        server_label.height + ( 2 * root.padding[1])
+
+            Label:
+                text:      'Port'
+                font_size: root.button_font_size
+                size_hint: 1, None
+                height:    self.texture_size[1] + ( 2 * root.padding[1]) 
+                #on_press:    root.callAction(tutorial_textInput.text) # call main function with argument!
+
+            TextInput:
+                id:        tutorial_port
+                text:      '8000'
+                multiline: False
+                #password:  True
+                font_size: root.button_font_size
+                size_hint: 1, None
+                height:    server_label.height
+                #on_press:     root.clear() # main.py -> funtion in tutorial class
+        Label: 
+            text:          'Tinker Setup!'
+            #size_hint:     1, None # turn off default size for y and set it to 100px
+            font_size:     '45sp'
+            height:        self.texture_size[1] + ( 2 * root.padding[1]) # use kivy size 1 (minimum) call ap instead of px!
+
+        BoxLayout:
+            id:            tutorial_submitBox
+            orientation:   'horizontal'
+            size_hint:     1, None
+            height:        server_label.height + ( 2 * root.padding[1])
+
+            Button:
+                text:      'Clear'
+                font_size: root.button_font_size
+                size_hint: 1, None
+                height:    self.texture_size[1] + ( 2 * root.padding[1]) 
+                on_press:  tutorial_port.text = ""; tutorial_server.text = ""#root.clear() # main.py -> funtion in tutorial class            
+            
+            Button:
+                id:        submit_button
+                text:      'Submit'
+                font_size: root.button_font_size
+                size_hint: 1, None
+                height:    self.texture_size[1] + ( 2 * root.padding[1]) 
+                on_press: root.manager.transition = SlideTransition(direction="left"); root.callAction(tutorial_server.text,tutorial_port.text) # call main function with argument!
+                #on_press: root.manager.current = 'controll'    
+
+<Controll>:
+    command:command
+    response:response
+
+    button_font_size: '25sp'
+    padding:          root.width * 0.02, root.width * 0.02 # added 2% padding!
+    
+    BoxLayout:
+        orientation: 'vertical'
+        padding:     root.padding
+
+        canvas:
+            Rectangle:
+                source:   'background/stressed_linen_@2X.png'
+                pos:      self.pos
+                size:     self.size # streched to full screen size...
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint:     1, None
+
+            TextInput:
+                id:  command
+                text: 'status'
+                font_size: '35sp'
+                size_hint:     1, None
+                multiline: False
+                #focus: True
+                on_text_validate: root.send_message(command.text); command.focus = True
+                #on_press: root.send_message(command.text)
+
+            Button:
+                text:      'Send!'
+                font_size: root.button_font_size
+                size_hint: 1, None
+                on_press:  root.send_message(command.text)
+
+        Label:
+            id: response
+            font_size: '35sp'
+            markup: True
+            text: 'response here!'
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint:     1, None
+            
+            Button:
+                text: 'Back to Setup!'      
+                font_size: root.button_font_size
+                size_hint:     1, None
+                on_press: 
+                on_release: root.manager.transition = SlideTransition(direction="right"); root.manager.current = root.manager.previous()
+
+            Button:
+                text: 'Quit'      
+                font_size: root.button_font_size
+                size_hint:     1, None
+                #on_press: 
+                on_release: quit()
